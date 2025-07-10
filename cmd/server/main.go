@@ -11,6 +11,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Handle("/", http.HandlerFunc(handlers.HomeHandler))
+	r.Handle("/register", http.HandlerFunc(handlers.RegisterHandler))
 	r.Handle("/login", http.HandlerFunc(handlers.LoginHandler))
 	r.Handle("/logout", http.HandlerFunc(handlers.LogoutHandler))
 

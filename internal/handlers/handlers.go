@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"projectlibrary/internal/storage"
+	"projectlibrary/media/templates"
 	"strings"
 	"time"
 
@@ -19,7 +21,15 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		token := extractToken(r)
 
 		if token == "" {
-			showLoginForm(w)
+			action := r.URL.Query().Get("action")
+			switch action {
+			case "register":
+				showForm(w, templates.RegisterTemplate)
+			case "login":
+				showForm(w, templates.LoginTemplate)
+			default:
+				showForm(w, templates.RegisterTemplate)
+			}
 			return
 		}
 
@@ -34,7 +44,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 			return
 		}
-		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write([]byte("Welcome, " + username + "! <a href='/logout'>Logout</a>"))
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -70,47 +80,65 @@ func validateToken(tokenString string) (jwt.Claims, error) {
 	return token.Claims, nil
 }
 
-func showLoginForm(w http.ResponseWriter) {
-	html := `
-		<form id="loginForm">
-			<input type="text" name="username" placeholder="Username" required>
-			<input type="password" name="password" placeholder="Password" required>
-			<button type="button" onclick="submitForm()">Login</button>
-		</form>
-
-		<script>
-			function submitForm() {
-				const form = document.getElementById("loginForm");
-				const data = {
-					username: form.username.value,
-					password: form.password.value
-				};
-
-				fetch("/login", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify(data)
-				})
-				.then(response => {
-					if (!response.ok) {
-						return response.json().then(err => { throw err; });
-					}
-					return response.json();
-				})
-				.then(data => {
-					alert(data.message);
-					window.location.href = data.redirect;
-				})
-				.catch(error => {
-					alert(error.message || "Login failed");
-				});
-			}
-		</script>
-	`
-	w.Header().Set("Content-Type", "text/html")
+func showForm(w http.ResponseWriter, html string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write([]byte(html))
+}
+
+func makeCookieAfterLogin(w http.ResponseWriter, id int32, username string) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":       id,
+		"username": username,
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
+	})
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		http.Error(w, "Failed to create token", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/",
+	})
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":  "Register successful",
+		"redirect": "/",
+	})
+}
+
+// RegisterHandler functions
+func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		var data struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+			Email    string `json:"email"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+			http.Error(w, "Invalid request", http.StatusBadRequest)
+			return
+		}
+
+		id, err := storage.AddUser(data.Username, data.Email, data.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		makeCookieAfterLogin(w, id, data.Username)
+
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 }
 
 // LoginHandler functions
@@ -118,7 +146,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		var data struct {
-			Username string `json:"username"`
+			Email    string `json:"email"`
 			Password string `json:"password"`
 		}
 
@@ -127,43 +155,18 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if data.Username != "admin" || data.Password != "password" {
-			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-			return
-		}
-
-		fmt.Println("User logged in:", data.Username)
-
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"username": data.Username,
-			"exp":      time.Now().Add(24 * time.Hour).Unix(),
-		})
-		tokenString, err := token.SignedString(jwtSecret)
+		id, name, err := storage.GetUserByEmail(data.Email, data.Password)
 		if err != nil {
-			http.Error(w, "Failed to create token", http.StatusInternalServerError)
+			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 			return
 		}
 
-		fmt.Println("Generated token:", tokenString)
-
-		http.SetCookie(w, &http.Cookie{
-			Name:     "token",
-			Value:    tokenString,
-			HttpOnly: true,
-			Secure:   true,
-			Path:     "/",
-		})
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"message":  "Login successful",
-			"redirect": "/",
-		})
+		makeCookieAfterLogin(w, id, name)
 
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
 	}
+
 }
 
 // LogoutHandler functions
