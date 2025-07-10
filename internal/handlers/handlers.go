@@ -2,87 +2,25 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"projectlibrary/internal/storage"
-	"projectlibrary/media/templates"
-	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt"
 )
 
-// HomeHandler functions
 var jwtSecret = []byte("sPfasW$#@D32as+*qwrg32da")
 
+// HomeHandler functions
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		token := extractToken(r)
-
-		if token == "" {
-			action := r.URL.Query().Get("action")
-			switch action {
-			case "register":
-				showForm(w, templates.RegisterTemplate)
-			case "login":
-				showForm(w, templates.LoginTemplate)
-			default:
-				showForm(w, templates.RegisterTemplate)
-			}
-			return
-		}
-
-		claims, err := validateToken(token)
-		if err != nil {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
-		}
-
-		username, ok := claims.(jwt.MapClaims)["username"].(string)
-		if !ok || username == "" {
-			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
-			return
-		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write([]byte("Welcome, " + username + "! <a href='/logout'>Logout</a>"))
+		w.Write([]byte("Welcome, " + r.Context().Value("username").(string) + "! <a href='/logout'>Logout</a>"))
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-}
-
-func extractToken(r *http.Request) string {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
-		return strings.TrimPrefix(authHeader, "Bearer ")
-	}
-
-	token, err := r.Cookie("token")
-	if err != nil {
-		return ""
-	}
-
-	return token.Value
-}
-
-func validateToken(tokenString string) (jwt.Claims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected algorithm: %v", token.Header["alg"])
-		}
-		return jwtSecret, nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse token: %w", err)
-	}
-
-	return token.Claims, nil
-}
-
-func showForm(w http.ResponseWriter, html string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(html))
 }
 
 func makeCookieAfterLogin(w http.ResponseWriter, id int32, username string) {
