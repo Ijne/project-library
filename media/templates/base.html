@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог книг</title>
+    <link rel="stylesheet" href="/media/static/style.css">
+    <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            gap: 0.5rem;
+        }
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background-color: #f8f8f8;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background-color: #e8e8e8;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination button.active {
+            background-color: #4a6fa5;
+            color: white;
+            border-color: #4a6fa5;
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-style: italic;
+            color: #666;
+        }
+        .book-catalog {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Библиотечный каталог</h1>
+            <nav>
+                <a href="/">Главная</a>
+            </nav>
+        </header>
+        
+        <main>
+            {{template "content" .}}
+        </main>
+        
+        <footer>
+            <p>© 2025 Библиотека. Все права защищены.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Пагинация
+            const pagination = document.querySelector('.pagination');
+            if (pagination) {
+                pagination.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'BUTTON') {
+                        const page = e.target.dataset.page;
+                        if (page) {
+                            window.location.href = `/catalog?page=${page}`;
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -9,6 +9,7 @@ var (
 			<button type="button" onclick="submitForm()">Register</button>
 		</form>
 		<a href="/?action=login">Login</a>
+		<a href="/catalog?page=1">Catalog</a>
 
 		<script>
 			function submitForm() {
@@ -49,6 +50,7 @@ var (
 			<button type="button" onclick="submitLoginForm()">Login</button>
 		</form>
 		<a href="/?action=register">Register</a>
+		<a href="/catalog?page=1">Catalog</a>
 
 		<script>
 			function submitLoginForm() {

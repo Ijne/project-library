@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write([]byte("Welcome, " + r.Context().Value("username").(string) + "! <a href='/logout'>Logout</a>"))
+		w.Write([]byte("Welcome, " + r.Context().Value("username").(string) + "! <a href='/logout'>Logout</a>\n<a href='/catalog?page=1'>Catalog</a>"))
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return

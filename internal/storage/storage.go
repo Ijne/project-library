@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"projectlibrary/internal/models"
 	"sync"
 	"time"
 
@@ -91,4 +92,37 @@ func GetUserByEmail(email, password string) (int32, string, error) {
 	}
 
 	return id, name, nil
+}
+
+func GetBooks(page int) ([]models.Book, error) {
+	once.Do(initDB)
+
+	var books []models.Book
+
+	rows, err := dbPool.Query(context.Background(), "SELECT id, title, author, status, user_id FROM books LIMIT 20 OFFSET $1", 20*(page-1))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get books: %w", err)
+	}
+
+	for rows.Next() {
+		var b models.Book
+		if err := rows.Scan(&b.ID, &b.Title, &b.Author, &b.Status, &b.UserID); err != nil {
+			fmt.Println("Failed to scan book row:", err)
+		}
+		books = append(books, b)
+	}
+
+	return books, nil
+}
+
+func GetTotalBooksCount() (int, error) {
+	once.Do(initDB)
+
+	var count int
+	err := dbPool.QueryRow(context.Background(), "SELECT COUNT(*) FROM books").Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get total books count: %w", err)
+	}
+
+	return count, nil
 }

@@ -1,0 +1,39 @@
+{{define "content"}}
+<div class="book-catalog">
+    {{range .Books}}
+    <div class="book-card">
+        <div class="book-cover placeholder">Нет обложки</div>
+        
+        <div class="book-info">
+            <h2>{{.Title}}</h2>
+            <p class="author">{{.Author}}</p>
+            <p class="status {{.Status}}">
+                {{if .Status}}Доступна{{end}}
+                {{if .Status}}На руках{{end}}
+            </p>
+            <p class="book-id">ID: {{.ID}}</p>
+        </div>
+    </div>
+    {{else}}
+    <div class="no-books">
+        <p>Книги не найдены</p>
+    </div>
+    {{end}}
+</div>
+
+<div class="pagination">
+    {{if gt .CurrentPage 1}}
+        <button data-page="{{.PrevPage}}">Назад</button>
+    {{else}}
+        <button disabled>Назад</button>
+    {{end}}
+    
+    <span>Страница {{.CurrentPage}} из {{.TotalPages}}</span>
+    
+    {{if lt .CurrentPage .TotalPages}}
+        <button data-page="{{.NextPage}}">Вперед</button>
+    {{else}}
+        <button disabled>Вперед</button>
+    {{end}}
+</div>
+{{end}}
