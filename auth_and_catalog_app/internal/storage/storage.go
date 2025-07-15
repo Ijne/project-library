@@ -31,7 +31,7 @@ func validatePassword(hashedPassword, password string) bool {
 }
 
 func initDB() {
-	connStr := "postgres://go_server:go_server@localhost:5432/projectlibrary?application_name=my_go_app"
+	connStr := "postgres://auth_and_catalog_app:go_server@localhost:5432/projectlibrary?application_name=auth_and_catalog_app"
 
 	config, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
@@ -52,7 +52,7 @@ func initDB() {
 	}
 
 	dbPool = pool
-	fmt.Println("Successfully created database connection pool!")
+	fmt.Println("Successfully created database connection pool!(auth_and_catalog_app)")
 }
 
 func AddUser(name, email, password string) (int32, error) {

@@ -1,7 +1,23 @@
 package handlers
 
-import "net/http"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	"github.com/Ijne/project-library/search_app/internal/storage"
+)
 
 func FindBook(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("response from search_app"))
+	title := r.URL.Query().Get("q")
+	fmt.Printf("title: -%s-\n", title)
+
+	books, err := storage.GetBookByTitle(title)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	json.NewEncoder(w).Encode(books)
 }
