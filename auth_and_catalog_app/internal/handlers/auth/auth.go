@@ -3,8 +3,9 @@ package auth
 import (
 	"encoding/json"
 	"net/http"
-	"projectlibrary/internal/storage"
 	"time"
+
+	"github.com/Ijne/project-library/auth_and_catalog_app/internal/storage"
 
 	"github.com/golang-jwt/jwt"
 )

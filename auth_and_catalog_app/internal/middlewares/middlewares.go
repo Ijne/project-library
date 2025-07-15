@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"projectlibrary/media/templates"
 	"strings"
+
+	"github.com/Ijne/project-library/auth_and_catalog_app/media/templates"
 
 	"github.com/golang-jwt/jwt"
 )

@@ -1,0 +1,134 @@
+{{define "content"}}
+<div class="search-container">
+    <form id="book-search-form" class="search-form">
+        <input type="text" id="book-search-input" placeholder="Введите название книги" required>
+        <button type="submit">Найти книгу</button>
+    </form>
+    <div id="search-results" class="search-results"></div>
+</div>
+
+<div class="book-catalog">
+    {{range .Books}}
+    <div class="book-card">
+        <div class="book-cover placeholder">Нет обложки</div>
+        
+        <div class="book-info">
+            <h2>{{.Title}}</h2>
+            <p class="author">{{.Author}}</p>
+            <p class="status {{.Status}}">
+                {{if .Status}}Доступна{{end}}
+                {{if .Status}}На руках{{end}}
+            </p>
+            <p class="book-id">ID: {{.ID}}</p>
+        </div>
+    </div>
+    {{else}}
+    <div class="no-books">
+        <p>Книги не найдены</p>
+    </div>
+    {{end}}
+</div>
+
+<div class="pagination">
+    {{if gt .CurrentPage 1}}
+        <button data-page="{{.PrevPage}}">Назад</button>
+    {{else}}
+        <button disabled>Назад</button>
+    {{end}}
+    
+    <span>Страница {{.CurrentPage}} из {{.TotalPages}}</span>
+    
+    {{if lt .CurrentPage .TotalPages}}
+        <button data-page="{{.NextPage}}">Вперед</button>
+    {{else}}
+        <button disabled>Вперед</button>
+    {{end}}
+</div>
+
+<script>
+document.getElementById('book-search-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const query = document.getElementById('book-search-input').value.trim();
+    if (!query) return;
+    
+    const resultsContainer = document.getElementById('search-results');
+    resultsContainer.innerHTML = '<p>Ищем книги...</p>';
+    
+    try {
+        // Здесь нужно указать правильный endpoint вашего API
+        const response = await fetch(`/api/search-books?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        if (data.items && data.items.length > 0) {
+            let html = '<div class="search-results-list"><h3>Результаты поиска:</h3><ul>';
+            data.items.forEach(book => {
+                html += `
+                <li>
+                    <strong>${book.title || 'Неизвестное название'}</strong>
+                    ${book.authors ? '<br>Автор: ' + book.authors.join(', ') : ''}
+                    ${book.publishedDate ? '<br>Год: ' + book.publishedDate : ''}
+                </li>`;
+            });
+            html += '</ul></div>';
+            resultsContainer.innerHTML = html;
+        } else {
+            resultsContainer.innerHTML = '<p>Книги не найдены</p>';
+        }
+    } catch (error) {
+        console.error('Ошибка поиска:', error);
+        resultsContainer.innerHTML = '<p>Произошла ошибка при поиске</p>';
+    }
+});
+</script>
+
+<style>
+.search-container {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 5px;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+}
+
+.search-form input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.search-form button {
+    padding: 8px 15px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-form button:hover {
+    background: #45a049;
+}
+
+.search-results {
+    margin-top: 15px;
+}
+
+.search-results-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.search-results-list li {
+    padding: 10px;
+    margin-bottom: 5px;
+    background: white;
+    border-radius: 4px;
+    border-left: 3px solid #4CAF50;
+}
+</style>
+{{end}}

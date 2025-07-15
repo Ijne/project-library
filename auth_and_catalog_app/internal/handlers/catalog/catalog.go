@@ -3,9 +3,10 @@ package catalog
 import (
 	"html/template"
 	"net/http"
-	"projectlibrary/internal/models"
-	"projectlibrary/internal/storage"
 	"strconv"
+
+	"github.com/Ijne/project-library/auth_and_catalog_app/internal/models"
+	"github.com/Ijne/project-library/auth_and_catalog_app/internal/storage"
 )
 
 var (

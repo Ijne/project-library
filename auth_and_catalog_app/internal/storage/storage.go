@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"projectlibrary/internal/models"
 	"sync"
 	"time"
+
+	"github.com/Ijne/project-library/auth_and_catalog_app/internal/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"

@@ -2,9 +2,11 @@ package main
 
 import (
 	"net/http"
-	"projectlibrary/internal/handlers/auth"
-	"projectlibrary/internal/handlers/catalog"
-	"projectlibrary/internal/middlewares"
+
+	"github.com/Ijne/project-library/auth_and_catalog_app/internal/handlers/auth"
+	"github.com/Ijne/project-library/auth_and_catalog_app/internal/handlers/catalog"
+	"github.com/Ijne/project-library/auth_and_catalog_app/internal/handlers/searchapi"
+	"github.com/Ijne/project-library/auth_and_catalog_app/internal/middlewares"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -19,6 +21,7 @@ func main() {
 	r.Handle("/register", http.HandlerFunc(auth.RegisterHandler))
 	r.Handle("/login", http.HandlerFunc(auth.LoginHandler))
 	r.Handle("/logout", http.HandlerFunc(auth.LogoutHandler))
+	r.Handle("/api/search-books", http.HandlerFunc(searchapi.Search))
 
 	r.Handle("/media/static/*", http.StripPrefix("/media/static/", http.FileServer(http.Dir("media/static/"))))
 	err := http.ListenAndServe(":8080", r)
