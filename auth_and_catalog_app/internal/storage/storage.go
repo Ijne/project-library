@@ -3,11 +3,13 @@ package storage
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/Ijne/project-library/auth_and_catalog_app/internal/models"
+	"github.com/joho/godotenv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -31,7 +33,16 @@ func validatePassword(hashedPassword, password string) bool {
 }
 
 func initDB() {
-	connStr := "postgres://auth_and_catalog_app:go_server@localhost:5432/projectlibrary?application_name=auth_and_catalog_app"
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	DB_HOST := os.Getenv("DB_HOST")
+	DB_PORT := os.Getenv("DB_PORT")
+	DB_USER := os.Getenv("DB_USER")
+
+	connStr := fmt.Sprintf("postgres://%s:go_server@%s:%s/projectlibrary?application_name=auth_and_catalog_app", DB_USER, DB_HOST, DB_PORT)
 
 	config, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
@@ -85,6 +96,7 @@ func GetUserByEmail(email, password string) (int32, string, error) {
 
 	err := dbPool.QueryRow(context.Background(), "SELECT id, name, password FROM users WHERE email = $1", email).Scan(&id, &name, &hashedPassword)
 	if err != nil {
+		fmt.Println(err)
 		return 0, "", fmt.Errorf("failed to get user by email: %w", err)
 	}
 

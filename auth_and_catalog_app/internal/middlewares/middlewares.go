@@ -3,15 +3,16 @@ package middlewares
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/Ijne/project-library/auth_and_catalog_app/media/templates"
+	"github.com/joho/godotenv"
 
 	"github.com/golang-jwt/jwt"
 )
-
-var jwtSecret = []byte("sPfasW$#@D32as+*qwrg32da")
 
 func JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +65,13 @@ func extractToken(r *http.Request) string {
 }
 
 func validateToken(tokenString string) (jwt.Claims, error) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	jwtSecret := []byte(os.Getenv("JWTsecret"))
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected algorithm: %v", token.Header["alg"])

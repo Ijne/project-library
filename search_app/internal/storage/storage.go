@@ -3,12 +3,14 @@ package storage
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/Ijne/project-library/search_app/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -17,7 +19,15 @@ var (
 )
 
 func initDb() {
-	connStr := "postgres://search_app:search_app@localhost:5432/projectlibrary?application_name=search_app"
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error with load .env")
+	}
+
+	DB_HOST := os.Getenv("DB_HOST")
+	DB_PORT := os.Getenv("DB_PORT")
+	DB_USER := os.Getenv("DB_USER")
+	connStr := fmt.Sprintf("postgres://%s:search_app@%s:%s/projectlibrary?application_name=search_app", DB_USER, DB_HOST, DB_PORT)
 
 	config, err := pgxpool.ParseConfig(connStr)
 	if err != nil {

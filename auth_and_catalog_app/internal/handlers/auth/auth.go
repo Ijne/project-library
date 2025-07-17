@@ -2,15 +2,17 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Ijne/project-library/auth_and_catalog_app/internal/storage"
+	"github.com/joho/godotenv"
 
 	"github.com/golang-jwt/jwt"
 )
-
-var jwtSecret = []byte("sPfasW$#@D32as+*qwrg32da")
 
 // HomeHandler functions
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -25,6 +27,13 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func makeCookieAfterLogin(w http.ResponseWriter, id int32, username string) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	jwtSecret := []byte(os.Getenv("JWTsecret"))
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":       id,
 		"username": username,
@@ -32,6 +41,7 @@ func makeCookieAfterLogin(w http.ResponseWriter, id int32, username string) {
 	})
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
+		fmt.Println("err:", err)
 		http.Error(w, "Failed to create token", http.StatusInternalServerError)
 		return
 	}
